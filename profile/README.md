@@ -1,4 +1,4 @@
-# ClubGenAI Bordeaux
+# Club GenAI Bordeaux
 
 Communauté IA générative — meetups, workshops, projets.
 
