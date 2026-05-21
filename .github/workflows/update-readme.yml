@@ -1,0 +1,41 @@
+name: Update org README
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+  repository_dispatch:
+    types: [workshop-published]
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch workshop repos
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh repo list clubgenai \
+            --visibility public \
+            --no-archived \
+            --limit 100 \
+            --json name,description,homepageUrl \
+            --jq '.[] | select(.name | startswith("workshop-"))' \
+            > /tmp/workshops.json
+
+      - name: Generate README
+        run: |
+          python3 scripts/gen_readme.py /tmp/workshops.json > profile/README.md
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add profile/README.md
+          git diff --cached --quiet || git commit -m "chore: update workshops list"
+          git push
